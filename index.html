@@ -22,7 +22,7 @@
                             reject("Geolocation error: " + error.message);
                         },
                         {
-                            enableHighAccuracy: true, // Enables precise GPS tracking
+                            enableHighAccuracy: true, // Ensures precise GPS tracking
                             timeout: 10000, // Wait for up to 10 seconds
                             maximumAge: 0 // Always fetch fresh location
                         }
@@ -31,30 +31,6 @@
                     reject("Geolocation not supported by this browser.");
                 }
             });
-        }
-
-        // Function to fetch location using Google Geolocation API
-        async function fetchGoogleGeolocation() {
-            try {
-                const response = await fetch("https://www.googleapis.com/geolocation/v1/geolocate?key=YOUR_GOOGLE_API_KEY", {
-                    method: "POST",
-                });
-                const data = await response.json();
-                return { latitude: data.location.lat, longitude: data.location.lng };
-            } catch (error) {
-                return { error: "Google Geolocation API failed: " + error.message };
-            }
-        }
-
-        // Function to get the user's IP-based location
-        async function fetchIPLocation() {
-            try {
-                const response = await fetch("https://ipapi.co/json/");
-                const data = await response.json();
-                return { latitude: data.latitude, longitude: data.longitude, ip: data.ip };
-            } catch (error) {
-                return { error: "IP-based location fetching failed." };
-            }
         }
 
         // Classroom boundary coordinates
@@ -75,21 +51,11 @@
             );
         }
 
-        // Function to detect GPS spoofing by comparing GPS & IP location
-        function detectFakeGPS(gpsLocation, ipLocation) {
-            const threshold = 0.05; // Allow small difference
-            const latDiff = Math.abs(gpsLocation.latitude - ipLocation.latitude);
-            const lonDiff = Math.abs(gpsLocation.longitude - ipLocation.longitude);
-
-            return latDiff > threshold || lonDiff > threshold;
-        }
-
         // Main function that runs on page load
         window.onload = async function () {
             const studentId = getUrlParameter("student_id");
             const studentIdDisplay = document.getElementById("studentId");
             const locationDisplay = document.getElementById("location");
-            const ipDisplay = document.getElementById("ipAddress");
             const statusDisplay = document.getElementById("status");
 
             if (studentId) {
@@ -102,28 +68,6 @@
 
                     // Display fetched latitude and longitude
                     locationDisplay.innerText = `Latitude: ${latitude}, Longitude: ${longitude}`;
-
-                    // Fetch Google Geolocation API for better accuracy
-                    let googleLocation = await fetchGoogleGeolocation();
-                    if (!googleLocation.error) {
-                        latitude = googleLocation.latitude;
-                        longitude = googleLocation.longitude;
-                    }
-
-                    // Fetch IP-based location
-                    const ipLocation = await fetchIPLocation();
-                    if (!ipLocation.error) {
-                        ipDisplay.innerText = `IP Address: ${ipLocation.ip} (Location: ${ipLocation.latitude}, ${ipLocation.longitude})`;
-                    } else {
-                        ipDisplay.innerText = ipLocation.error;
-                    }
-
-                    // Detect GPS spoofing
-                    if (detectFakeGPS({ latitude, longitude }, ipLocation)) {
-                        alert("⚠️ Warning: Your GPS location does not match your IP location. Possible spoofing detected!");
-                        statusDisplay.innerText = "Status: ❌ Fake GPS suspected!";
-                        return;
-                    }
 
                     // Check if the student is inside the classroom
                     if (isLocationInsideClassroom(latitude, longitude, classroomBounds)) {
@@ -169,7 +113,6 @@
     <h1>📌 Attendance Marking</h1>
     <p id="studentId">Fetching your details...</p>
     <p id="location">📍 Fetching your location...</p>
-    <p id="ipAddress">🌐 Fetching your IP address...</p>
     <p id="status">🔄 Checking status...</p>
 </body>
 </html>
