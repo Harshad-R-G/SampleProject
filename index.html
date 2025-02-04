@@ -8,7 +8,8 @@
             const params = new URLSearchParams(window.location.search);
             return params.get(name);
         }
-        
+
+        // Function to get the user's geolocation
         function fetchGeolocation() {
             return new Promise((resolve, reject) => {
                 if (navigator.geolocation) {
@@ -18,8 +19,9 @@
                             resolve({ latitude, longitude });
                         },
                         (error) => {
-                            reject(error.message);
-                        }
+                            reject("Geolocation error: " + error.message);
+                        },
+                        { enableHighAccuracy: true }
                     );
                 } else {
                     reject("Geolocation not supported by this browser.");
@@ -27,12 +29,23 @@
             });
         }
 
+        // Function to get the user's public IP address
+        async function fetchIPAddress() {
+            try {
+                const response = await fetch("https://api64.ipify.org?format=json");
+                const data = await response.json();
+                document.getElementById("ipAddress").innerText = "IP Address: " + data.ip;
+            } catch (error) {
+                document.getElementById("ipAddress").innerText = "IP Address: Unable to fetch.";
+            }
+        }
+
         // Define the classroom boundaries
         const classroomBounds = {
-            north: 19.971200, // Maximum latitude
-            south: 19.971171, // Minimum latitude
-            east: 73.719880,  // Maximum longitude
-            west: 73.719807   // Minimum longitude
+            north: 19.971319,  // Maximum latitude
+            south: 19.971109,  // Minimum latitude
+            east:  73.719849,  // Maximum longitude
+            west:  73.719780   // Minimum longitude
         };
 
         // Function to check if the location is inside the classroom
@@ -50,56 +63,68 @@
             const studentIdDisplay = document.getElementById("studentId");
             const locationDisplay = document.getElementById("location");
             const ipDisplay = document.getElementById("ipAddress");
+            const statusDisplay = document.getElementById("status");
 
             if (studentId) {
                 studentIdDisplay.innerText = "Student ID: " + decodeURIComponent(studentId);
 
-                // Get geolocation
                 try {
+                    // Fetch geolocation
                     const location = await fetchGeolocation();
                     const { latitude, longitude } = location;
 
+                    // Display fetched latitude and longitude
+                    locationDisplay.innerText = `Latitude: ${latitude}, Longitude: ${longitude}`;
+
                     // Check if the location is inside the classroom
                     if (isLocationInsideClassroom(latitude, longitude, classroomBounds)) {
-                        locationDisplay.innerText = `Location: Latitude ${latitude}, Longitude ${longitude} (Inside classroom)`;
+                        locationDisplay.innerText = `Location: Latitude ${latitude}, Longitude ${longitude} (✅ Inside classroom)`;
+                        alert("✅ You are in the classroom. Attendance is being marked...");
 
-                        alert("You are in the classroom");
-                        // Send student ID, location, and mark attendance
-                        /* const response = await fetch("MarkAttendanceServlet", {
+                        // Prepare form data
+                        const formData = new URLSearchParams();
+                        formData.append("student_id", studentId);
+                        formData.append("latitude", latitude);
+                        formData.append("longitude", longitude);
+                        formData.append("subject", "Java"); // Example subject
+                        formData.append("date", new Date().toISOString().split("T")[0]); // Current date
+
+                        // Send form data via POST
+                        const response = await fetch("SetAttendance", {
                             method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                student_id: studentId,
-                                latitude: latitude,
-                                longitude: longitude,
-                            }),
+                            headers: {
+                                "Content-Type": "application/x-www-form-urlencoded", // Form-encoded data
+                            },
+                            body: formData.toString(), // Convert formData to a URL-encoded string
                         });
+
                         const serverResponse = await response.text();
-                        console.log(serverResponse); */
+                        alert("📩 Server Response: " + serverResponse);
                     } else {
-                        locationDisplay.innerText = `Location: Latitude ${latitude}, Longitude ${longitude} (Outside classroom)`;
-                        alert("You are outside the classroom boundary. Attendance cannot be marked.");
+                        locationDisplay.innerText = `Location: Latitude ${latitude}, Longitude ${longitude} (❌ Outside classroom)`;
+                        alert("❌ You are outside the classroom boundary. Attendance cannot be marked.");
                     }
+
                 } catch (error) {
-                    locationDisplay.innerText = "Location: Unable to fetch location (" + error + ")";
+                    locationDisplay.innerText = "Location: ❌ Unable to fetch (" + error + ")";
+                    statusDisplay.innerText = "Status: ❌ Location access failed.";
                 }
 
                 // Fetch client IP address
-                fetch("GetClientIPServlet")
-                    .then(response => response.text())
-                    .then(ip => {
-                        ipDisplay.innerText = "IP Address: " + ip;
-                    });
+                fetchIPAddress();
+
             } else {
-                studentIdDisplay.innerText = "No student ID found!";
+                studentIdDisplay.innerText = "⚠️ No student ID found!";
+                statusDisplay.innerText = "Status: ❌ Unable to proceed without student ID.";
             }
         };
     </script>
 </head>
 <body>
-    <h1>Attendance Marking</h1>
+    <h1>📌 Attendance Marking</h1>
     <p id="studentId">Fetching your details...</p>
-    <p id="location">Fetching your location...</p>
-    <p id="ipAddress">Fetching your IP address...</p>
+    <p id="location">📍 Fetching your location...</p>
+    <p id="ipAddress">🌐 Fetching your IP address...</p>
+    <p id="status">🔄 Checking status...</p>
 </body>
 </html>
