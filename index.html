@@ -33,6 +33,17 @@
             });
         }
 
+        // Function to get the user's IP-based location
+        async function fetchIPLocation() {
+            try {
+                const response = await fetch("https://ipapi.co/json/");
+                const data = await response.json();
+                return { latitude: data.latitude, longitude: data.longitude, ip: data.ip };
+            } catch (error) {
+                return { error: "IP-based location fetching failed." };
+            }
+        }
+
         // Classroom boundary coordinates
         const classroomBounds = {
             north: 19.971319,  // Maximum latitude
@@ -56,6 +67,7 @@
             const studentId = getUrlParameter("student_id");
             const studentIdDisplay = document.getElementById("studentId");
             const locationDisplay = document.getElementById("location");
+            const ipDisplay = document.getElementById("ipAddress");
             const statusDisplay = document.getElementById("status");
 
             if (studentId) {
@@ -67,11 +79,19 @@
                     let { latitude, longitude } = location;
 
                     // Display fetched latitude and longitude
-                    locationDisplay.innerText = `Latitude: ${latitude}, Longitude: ${longitude}`;
+                    locationDisplay.innerText = `📍 GPS Location: ${latitude}, ${longitude}`;
+
+                    // Fetch IP-based location
+                    const ipLocation = await fetchIPLocation();
+                    if (!ipLocation.error) {
+                        ipDisplay.innerText = `🌐 IP Address: ${ipLocation.ip} (📍 IP Location: ${ipLocation.latitude}, ${ipLocation.longitude})`;
+                    } else {
+                        ipDisplay.innerText = ipLocation.error;
+                    }
 
                     // Check if the student is inside the classroom
                     if (isLocationInsideClassroom(latitude, longitude, classroomBounds)) {
-                        locationDisplay.innerText = `✅ Location Verified: Latitude ${latitude}, Longitude ${longitude} (Inside classroom)`;
+                        locationDisplay.innerText += " ✅ (Inside classroom)";
                         alert("✅ You are in the classroom. Attendance is being marked...");
 
                         // Prepare form data
@@ -94,7 +114,7 @@
                         const serverResponse = await response.text();
                         alert("📩 Server Response: " + serverResponse);
                     } else {
-                        locationDisplay.innerText = `❌ Location: Latitude ${latitude}, Longitude ${longitude} (Outside classroom)`;
+                        locationDisplay.innerText += " ❌ (Outside classroom)";
                         alert("❌ You are outside the classroom boundary. Attendance cannot be marked.");
                     }
 
@@ -112,7 +132,8 @@
 <body>
     <h1>📌 Attendance Marking</h1>
     <p id="studentId">Fetching your details...</p>
-    <p id="location">📍 Fetching your location...</p>
+    <p id="location">📍 Fetching your GPS location...</p>
+    <p id="ipAddress">🌐 Fetching your IP address...</p>
     <p id="status">🔄 Checking status...</p>
 </body>
 </html>
