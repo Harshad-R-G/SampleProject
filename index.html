@@ -1,139 +1,149 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>Attendance Marking</title>
-    <script>
-        // Function to get URL parameters (e.g., student_id from query string)
-        function getUrlParameter(name) {
-            const params = new URLSearchParams(window.location.search);
-            return params.get(name);
-        }
-
-        // Function to fetch the user's geolocation with high accuracy
-        function fetchGeolocation() {
-            return new Promise((resolve, reject) => {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            const { latitude, longitude } = position.coords;
-                            resolve({ latitude, longitude });
-                        },
-                        (error) => {
-                            reject("Geolocation error: " + error.message);
-                        },
-                        {
-                            enableHighAccuracy: true, // Ensures precise GPS tracking
-                            timeout: 10000, // Wait for up to 10 seconds
-                            maximumAge: 0 // Always fetch fresh location
-                        }
-                    );
-                } else {
-                    reject("Geolocation not supported by this browser.");
-                }
-            });
-        }
-
-        // Function to get the user's IP-based location
-        async function fetchIPLocation() {
-            try {
-                const response = await fetch("https://ipapi.co/json/");
-                const data = await response.json();
-                return { latitude: data.latitude, longitude: data.longitude, ip: data.ip };
-            } catch (error) {
-                return { error: "IP-based location fetching failed." };
-            }
-        }
-
-        // Classroom boundary coordinates
-        const classroomBounds = {
-            north: 19.971319,  // Maximum latitude
-            south: 19.971109,  // Minimum latitude
-            east:  73.719849,  // Maximum longitude
-            west:  73.719780   // Minimum longitude
-        };
-
-        // Function to check if the user is inside the classroom boundaries
-        function isLocationInsideClassroom(latitude, longitude, bounds) {
-            return (
-                latitude >= bounds.south &&
-                latitude <= bounds.north &&
-                longitude >= bounds.west &&
-                longitude <= bounds.east
-            );
-        }
-
-        // Main function that runs on page load
-        window.onload = async function () {
-            const studentId = getUrlParameter("student_id");
-            const studentIdDisplay = document.getElementById("studentId");
-            const locationDisplay = document.getElementById("location");
-            const ipDisplay = document.getElementById("ipAddress");
-            const statusDisplay = document.getElementById("status");
-
-            if (studentId) {
-                studentIdDisplay.innerText = "Student ID: " + decodeURIComponent(studentId);
-
-                try {
-                    // Fetch geolocation
-                    let location = await fetchGeolocation();
-                    let { latitude, longitude } = location;
-
-                    // Display fetched latitude and longitude
-                    locationDisplay.innerText = `📍 GPS Location: ${latitude}, ${longitude}`;
-
-                    // Fetch IP-based location
-                    const ipLocation = await fetchIPLocation();
-                    if (!ipLocation.error) {
-                        ipDisplay.innerText = `🌐 IP Address: ${ipLocation.ip} (📍 IP Location: ${ipLocation.latitude}, ${ipLocation.longitude})`;
-                    } else {
-                        ipDisplay.innerText = ipLocation.error;
-                    }
-
-                    // Check if the student is inside the classroom
-                    if (isLocationInsideClassroom(latitude, longitude, classroomBounds)) {
-                        locationDisplay.innerText += " ✅ (Inside classroom)";
-                        alert("✅ You are in the classroom. Attendance is being marked...");
-
-                        // Prepare form data
-                        const formData = new URLSearchParams();
-                        formData.append("student_id", studentId);
-                        formData.append("latitude", latitude);
-                        formData.append("longitude", longitude);
-                        formData.append("subject", "Java"); // Example subject
-                        formData.append("date", new Date().toISOString().split("T")[0]); // Current date
-
-                        // Send form data via POST
-                        const response = await fetch("SetAttendance", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/x-www-form-urlencoded", // Form-encoded data
-                            },
-                            body: formData.toString(), // Convert formData to a URL-encoded string
-                        });
-
-                        const serverResponse = await response.text();
-                        alert("📩 Server Response: " + serverResponse);
-                    } else {
-                        locationDisplay.innerText += " ❌ (Outside classroom)";
-                        alert("❌ You are outside the classroom boundary. Attendance cannot be marked.");
-                    }
-
-                } catch (error) {
-                    locationDisplay.innerText = "❌ Unable to fetch location: " + error;
-                    statusDisplay.innerText = "Status: ❌ Location access failed.";
-                }
-            } else {
-                studentIdDisplay.innerText = "⚠️ No student ID found!";
-                statusDisplay.innerText = "Status: ❌ Unable to proceed without student ID.";
-            }
-        };
-    </script>
+    <title>Attendance Marking with Face Recognition</title>
 </head>
+
 <body>
     <h1>📌 Attendance Marking</h1>
     <p id="studentId">Fetching your details...</p>
     <p id="location">📍 Fetching your GPS location...</p>
     <p id="ipAddress">🌐 Fetching your IP address...</p>
     <p id="status">🔄 Checking status...</p>
+
+    <!-- Video stream for face capture -->
+    <video id="video" width="320" height="240" autoplay></video>
+    <button onclick="captureImage()">📸 Capture Image</button>
+
+    <script>
+        // Get URL parameter (e.g., student_id from query string)
+        function getUrlParameter(name) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(name);
+        }
+
+        // Access webcam and stream video
+        async function startCamera() {
+            const video = document.getElementById("video");
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+            } catch (error) {
+                alert("❌ Error accessing camera: " + error.message);
+            }
+        }
+
+        // Capture image from webcam and send it for face verification
+        async function captureImage() {
+            const video = document.getElementById("video");
+            const canvas = document.createElement("canvas");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageBlob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg"));
+
+            // Send image to face recognition API
+            const formData = new FormData();
+            formData.append("image", imageBlob);
+
+            try {
+                const response = await fetch("http://localhost:5000/verify-face", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`✅ Face recognized: ${result.student_name}`);
+                    await markAttendance(result.student_name);
+                } else {
+                    alert("❌ Face not recognized!");
+                }
+            } catch (error) {
+                alert("❌ Error verifying face: " + error.message);
+            }
+        }
+
+        // Fetch GPS location
+        function fetchGeolocation() {
+            return new Promise((resolve, reject) => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            resolve(position.coords);
+                        },
+                        (error) => {
+                            reject("Geolocation error: " + error.message);
+                        },
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                    );
+                } else {
+                    reject("Geolocation not supported.");
+                }
+            });
+        }
+
+        // Check if the user is inside the classroom boundaries
+        function isLocationInsideClassroom(latitude, longitude) {
+            const bounds = {
+                north: 19.971319,
+                south: 19.971109,
+                east: 73.719849,
+                west: 73.719780,
+            };
+
+            return latitude >= bounds.south && latitude <= bounds.north &&
+                   longitude >= bounds.west && longitude <= bounds.east;
+        }
+
+        // Mark attendance
+        async function markAttendance(studentName) {
+            const studentId = getUrlParameter("student_id");
+            const coords = await fetchGeolocation();
+            const isInside = isLocationInsideClassroom(coords.latitude, coords.longitude);
+
+            if (!isInside) {
+                alert("❌ You are outside the classroom boundary.");
+                return;
+            }
+
+            const formData = new URLSearchParams();
+            formData.append("student_id", studentId);
+            formData.append("student_name", studentName);
+            formData.append("latitude", coords.latitude);
+            formData.append("longitude", coords.longitude);
+            formData.append("subject", "Java");
+            formData.append("date", new Date().toISOString().split("T")[0]);
+
+            try {
+                const response = await fetch("SetAttendance", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: formData.toString(),
+                });
+                const result = await response.text();
+                alert("📩 Attendance marked: " + result);
+            } catch (error) {
+                alert("❌ Error marking attendance: " + error.message);
+            }
+        }
+
+        // Initialize on page load
+        window.onload = function () {
+            const studentId = getUrlParameter("student_id");
+            if (!studentId) {
+                alert("⚠️ No student ID found!");
+                return;
+            }
+
+            document.getElementById("studentId").innerText = "Student ID: " + studentId;
+            startCamera();
+        };
+    </script>
+
 </body>
+
 </html>
