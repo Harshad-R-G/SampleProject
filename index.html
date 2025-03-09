@@ -49,7 +49,7 @@
             formData.append("image", imageBlob);
 
             try {
-                const response = await fetch("http://localhost:5000/verify-face", {
+                const response = await fetch("https://harshad-r-g.github.io/SampleProject/face_recognition_api.py", {
                     method: "POST",
                     body: formData,
                 });
