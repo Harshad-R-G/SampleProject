@@ -9,6 +9,7 @@
     <h1>📌 Attendance Marking</h1>
     <p id="studentId">Fetching your details...</p>
     <p id="location">📍 Fetching your GPS location...</p>
+    <p id="ipAddress">🌐 Fetching your IP address...</p>
     <p id="status">🔄 Checking status...</p>
 
     <!-- Video stream for face capture -->
@@ -16,10 +17,25 @@
     <button onclick="captureImage()">📸 Capture Image</button>
 
     <script>
+        let userIP = "";
+
         // Get student_id from the URL parameter
         function getUrlParameter(name) {
             const params = new URLSearchParams(window.location.search);
             return params.get(name);
+        }
+
+        // Fetch user's public IP address
+        async function fetchIPAddress() {
+            try {
+                const response = await fetch("https://api64.ipify.org?format=json");
+                const data = await response.json();
+                userIP = data.ip;
+                document.getElementById("ipAddress").innerText = "🌐 IP Address: " + userIP;
+            } catch (error) {
+                console.error("Error fetching IP address: ", error);
+                userIP = "Unavailable";
+            }
         }
 
         // Access webcam and start video stream
@@ -51,12 +67,13 @@
                 return;
             }
 
-            // Send image and student details to servlet
+            // Send image, location, IP, and student details to servlet
             const formData = new FormData();
             formData.append("image", imageBlob);
             formData.append("student_id", studentId);
             formData.append("latitude", coords.latitude);
             formData.append("longitude", coords.longitude);
+            formData.append("ip_address", userIP);
 
             try {
                 const response = await fetch("verify-face", {
@@ -100,18 +117,20 @@
             };
 
             return latitude >= bounds.south && latitude <= bounds.north &&
-                   longitude >= bounds.west && longitude <= bounds.east;
+                longitude >= bounds.west && longitude <= bounds.east;
         }
 
         // Initialize on page load
-        window.onload = function () {
+        window.onload = async function () {
             const studentId = getUrlParameter("student_id");
             if (!studentId) {
                 alert("⚠️ No student ID found!");
                 return;
             }
             document.getElementById("studentId").innerText = "Student ID: " + studentId;
-            startCamera();
+
+            await fetchIPAddress(); // Fetch IP address
+            startCamera();          // Start the camera
         };
     </script>
 
