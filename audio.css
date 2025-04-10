@@ -1,0 +1,88 @@
+/* Global Styles */
+* {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #121212;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* Main Container */
+#demo {
+  background-color: #181818;
+  width: 500px;
+  padding: 30px 20px;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+/* Audio Player */
+#demoAudio {
+  width: 100%;
+  margin: 15px 0;
+  background-color: #000;
+  border-radius: 10px;
+}
+
+/* Playlist Container */
+#demoList {
+  max-height: 350px;
+  overflow-y: auto;
+  background-color: #121212;
+  border-radius: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #535353 #121212;
+}
+
+/* Scrollbar (For Webkit Browsers) */
+#demoList::-webkit-scrollbar {
+  width: 10px;
+}
+#demoList::-webkit-scrollbar-track {
+  background: #121212;
+}
+#demoList::-webkit-scrollbar-thumb {
+  background-color: #535353;
+  border-radius: 10px;
+  border: 2px solid #121212;
+}
+
+/* Individual Song Items */
+#demoList .song {
+  padding: 15px 20px;
+  color: #b3b3b3;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #282828;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+#demoList .song:hover {
+  background-color: #282828;
+}
+
+/* Playing Song */
+#demoList .song.now {
+  color: #fff;
+  font-weight: 600;
+  background-color: #1db954;
+}
+
+/* Music Icon */
+#demoList .song::before {
+  content: "🎵";
+  margin-right: 15px;
+}
+#demoList .song.now::before {
+  content: "▶";
+  color: white;
+}
