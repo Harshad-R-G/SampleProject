@@ -25,7 +25,19 @@
       position: relative;
       z-index: 2;
     }
-
+    #coverArt {
+      width: 100%;
+      max-height: 300px;
+      object-fit: cover;
+      border-radius: 15px;
+      margin-bottom: 15px;
+      transition: transform 0.3s ease;
+    }
+    #coverArt.playing {
+      animation: spin 20s linear infinite;
+      border-radius: 50%;
+      box-shadow: 0 0 15px #1db954;
+    }
 
     @keyframes spin {
       from { transform: rotate(0deg); }
@@ -62,10 +74,11 @@
 </head>
 <body>
   <video id="bgVideo" autoplay muted loop>
-    <source src="video/video1.mp4" type="video/mp4">
+    <source src="video1.mp4" type="video/mp4">
   </video>
 
   <div id="demo">
+    <img id="coverArt" src="images/image.png" alt="Cover Art" />
     <div id="songTitle">Select a song...</div>
     <audio id="demoAudio" controls></audio>
     <div id="progressContainer">
@@ -98,23 +111,23 @@
     const player = document.getElementById("demoAudio");
     const bgVideo = document.getElementById("bgVideo");
     const videoMap = [
-      "video/video1.mp4",
-      "video/video2.mp4",
-      "video/video3.mp4",
-      "video/video4.mp4",
-      "video/video5.mp4",
-      "video/video6.mp4",
-      "video/video7.mp4",
-      "video/video8.mp4",
-      "video/video9.mp4",
-      "video/video10.mp4",
-      "video/video11.mp4",
-      "video/video12.mp4",
-      "video/video13.mp4",
-      "video/video14.mp4",
-      "video/video15.mp4",
-      "video/video16.mp4",
-      "video/video17.mp4"
+      "video1.mp4",
+      "video2.mp4",
+      "video3.mp4",
+      "video4.mp4",
+      "video5.mp4",
+      "video6.mp4",
+      "video7.mp4",
+      "video8.mp4",
+      "video9.mp4",
+      "video10.mp4",
+      "video11.mp4",
+      "video12.mp4",
+      "video13.mp4",
+      "video14.mp4",
+      "video15.mp4",
+      "video16.mp4",
+      "video17.mp4"
     ];
 
     player.ontimeupdate = () => {
@@ -140,7 +153,7 @@
         bgVideo.load();
         bgVideo.play();
 
-        player.src = "audio/" + el.dataset.src;
+        player.src = el.dataset.src;
         player.play();
 
         document.getElementById("coverArt").src = el.dataset.cover;
