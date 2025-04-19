@@ -10,9 +10,9 @@
     <p id="ipAddress">🌐 Fetching your IP address...</p>
     <p id="status">🔄 Checking status...</p>
 
-    <!-- Video stream for face capture -->
-    <video id="video" width="320" height="240" autoplay></video>
-    <button onclick="captureImage()">📸 Capture Image</button>
+    <!-- Removed video stream -->
+
+    <button onclick="markAttendance()">📥 Mark Attendance</button>
 
     <script>
         let userIP = "";
@@ -31,53 +31,6 @@
             } catch (error) {
                 console.error("Error fetching IP address: ", error);
                 userIP = "Unavailable";
-            }
-        }
-
-        async function startCamera() {
-            const video = document.getElementById("video");
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
-            } catch (error) {
-                alert("❌ Error accessing camera: " + error.message);
-            }
-        }
-
-        async function captureImage() {
-            const video = document.getElementById("video");
-            const canvas = document.createElement("canvas");
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            const imageBlob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg"));
-
-            const studentId = getUrlParameter("student_id");
-            const coords = await fetchGeolocation();
-
-            if (!isLocationInsideClassroom(coords.latitude, coords.longitude)) {
-                alert("❌ You are outside the classroom boundary.");
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append("image", imageBlob);
-            formData.append("student_id", studentId);
-            formData.append("latitude", coords.latitude);
-            formData.append("longitude", coords.longitude);
-            formData.append("ip_address", userIP);
-
-            try {
-                const response = await fetch("verify-face", {
-                    method: "POST",
-                    body: formData,
-                });
-
-                const result = await response.json();
-                alert(result.success ? `✅ Attendance marked for ${studentId}` : "❌ Face not recognized.");
-            } catch (error) {
-                alert("❌ Error sending image: " + error.message);
             }
         }
 
@@ -104,7 +57,35 @@
             };
 
             return latitude >= bounds.south && latitude <= bounds.north &&
-                longitude >= bounds.west && longitude <= bounds.east;
+                   longitude >= bounds.west && longitude <= bounds.east;
+        }
+
+        async function markAttendance() {
+            const studentId = getUrlParameter("student_id");
+            const coords = await fetchGeolocation();
+
+            if (!isLocationInsideClassroom(coords.latitude, coords.longitude)) {
+                alert("❌ You are outside the classroom boundary.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("student_id", studentId);
+            formData.append("latitude", coords.latitude);
+            formData.append("longitude", coords.longitude);
+            formData.append("ip_address", userIP);
+
+            try {
+                const response = await fetch("verify-face", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                const result = await response.json();
+                alert(result.success ? `✅ Attendance marked for ${studentId}` : "❌ Face not recognized.");
+            } catch (error) {
+                alert("❌ Error marking attendance: " + error.message);
+            }
         }
 
         window.onload = async function () {
@@ -116,7 +97,6 @@
             document.getElementById("studentId").innerText = "Student ID: " + studentId;
 
             await fetchIPAddress();
-            startCamera();
         };
     </script>
 </body>
