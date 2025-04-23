@@ -1,0 +1,216 @@
+<html>
+<body>"C:\xampp\sendmail\sendmail.exe -t"
+; configuration for fake sendmail
+
+[sendmail]
+
+smtp_server=smtp.gmail.com
+smtp_port=587
+smtp_ssl=tls
+
+auth_username=hgangurde46@gmail.com
+auth_password=wess crxy iagl qrmf
+
+force_sender=your_email@gmail.com
+
+error_logfile=error.log
+;debug_logfile=debug.log
+
+hostname=localhost
+[22-04-2025 05:20 PM] Harshad.R.Gangurde: <?php
+
+// 1. Session create, update, destroy
+session_start();
+$_SESSION['name'] = "Alex";
+echo $_SESSION['name'];
+$_SESSION['name'] = "John";
+session_destroy();
+
+// 2. Validation
+$username = "user123";
+$email = "test@example.com";
+if (!preg_match("/^[a-zA-Z0-9]*$/", $username)) echo "Invalid username";
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) echo "Invalid email";
+
+// 3. Enter and retrieve data from DB
+$conn = new mysqli("localhost", "root", "", "testdb");
+$conn->query("INSERT INTO data (name) VALUES ('John')");
+$res = $conn->query("SELECT * FROM data");
+while ($r = $res->fetch_assoc()) echo $r['name'] . "<br>";
+
+// 4. Create PDF (requires FPDF)
+require("fpdf.php");
+$pdf = new FPDF();
+$pdf->AddPage();
+$pdf->SetFont("Arial", "B", 16);
+$pdf->Cell(40, 10, "Hello PDF");
+$pdf->Output();
+
+// 5. Prime check
+$n = 7; $flag = true;
+for ($i = 2; $i <= sqrt($n); $i++) if ($n % $i == 0) $flag = false;
+echo $flag ? "Prime" : "Not Prime";
+
+// 6. Email validation
+$email = "abc@xyz.com";
+echo filter_var($email, FILTER_VALIDATE_EMAIL) ? "Valid" : "Invalid";
+
+// 7. Session management
+session_start();
+$_SESSION['user'] = 'Alex';
+echo $_SESSION['user'];
+
+// 8. 4 String Functions
+$str = "hello world";
+echo strtoupper($str);
+echo strtolower($str);
+echo ucfirst($str);
+echo strlen($str);
+
+// 9. 8 Math Functions
+echo abs(-10);
+echo ceil(4.3);
+echo floor(4.7);
+echo round(4.5);
+echo max(1,2,3);
+echo min(1,2,3);
+echo pow(2,3);
+echo sqrt(16);
+
+// 10. Replace substr
+$str = "the cat in the hat";
+echo preg_replace('/the/', 'best', $str, 1);
+
+// 11. Email (basic mail setup)
+mail("test@example.com", "Subject", "Message", "From: sender@example.com");
+
+// 12. Positive or negative
+$num = -1;
+echo ($num >= 0) ? "Positive" : "Negative";
+
+// 13. Insert to employee
+$conn->query("INSERT INTO employee (name) VALUES ('Mike')");
+
+// 14. Login page
+<form method="post">
+<input name="user"><input name="pass"><input type="submit"></form>
+<?php if ($_POST['user'] == 'admin' && $_POST['pass'] == '123') echo "Welcome"; ?>
+
+// 15. Foreach
+$arr = [1,2,3]; foreach ($arr as $v) echo $v;
+
+// 16. Day of week
+$d = 3;
+switch($d){case 1:echo "Mon";break;case 2:echo "Tue";break;default:echo "Other";}
+
+// 17. Factorial
+$f = 1; for ($i = 1; $i <= 5; $i++) $f *= $i; echo $f;
+
+// 18. Calculator using switch
+$a = 5; $b = 2; $op = '+';
+switch($op){case '+':echo $a+$b;break;case '-':echo $a-$b;}
+
+// 19. Reverse string
+$str = "hello"; $rev = "";
+for ($i = strlen($str)-1; $i >= 0; $i--) $rev .= $str[$i]; echo $rev;
+
+// 20. Count words
+$str = "hello world php";
+echo count(explode(" ", $str));
+
+// 21. Leap year
+$y = 2024; echo ($y % 4 == 0 && ($y % 100 != 0 || $y % 400 == 0)) ? "Leap" : "Not";
+
+// 22. First 30 even numbers
+for ($i = 1; $i <= 30; $i++) echo $i*2 . " ";
+
+// 23. Reverse number
+$n = 123; $rev = 0;
+while ($n != 0) {$rev = $rev*10 + $n%10; $n = intval($n/10);} echo $rev;
+
+// 24. Associative array
+$arr = ["a"=>1,"b"=>2]; echo $arr["a"];
+
+// 25. Implode & explode
+$arr = ["PHP", "MySQL"];
+$str = implode(",", $arr);
+echo $str;
+print_r(explode(",", $str));
+
+// 26. Count words without function
+$str = "hello world php";
+$count = 1;
+for ($i = 0; $i < strlen($str); $i++) if ($str[$i] == ' ') $count++;
+echo $count;
+
+// 27. Single Inheritance
+class A { function show() { echo "A"; } }
+class B extends A {}
+$obj = new B(); $obj->show();
+
+// 28. Delete RollNo=2
+$conn->query("DELETE FROM student WHERE RollNo=2");
+
+// 29. Update name where RollNo=1
+$conn->query("UPDATE student SET name='Updated' WHERE RollNo=1");
+
+// 30. Send/receive Email (same as Q11)
+mail("test@example.com", "Subject", "Message", "From: sender@example.com");
+
+// 31. Update/delete DB
+$conn->query("UPDATE data SET name='Test' WHERE id=1");
+$conn->query("DELETE FROM data WHERE id=2");
+
+// 32. Set and modify cookies
+setcookie("user", "Alex", time()+3600);
+echo $_COOKIE['user'];
+
+// 33. 6 Introspection methods
+print_r(get_class_methods('FPDF'));
+print_r(get_object_vars($pdf));
+print_r(get_class($pdf));
+print_r(get_parent_class($pdf));
+print_r(method_exists($pdf, 'AddPage'));
+print_r(property_exists($pdf, 'page'));
+
+// 34. Insert DB
+$conn->query("INSERT INTO test (val) VALUES ('abc')");
+
+// 35. Area rectangle with class
+class Percentage {
+  public $length, $width;
+  function area() { return $this->length * $this->width; }
+}
+$a = new Percentage(); $a->length=5; $a->width=3; echo $a->area();
+
+// 36. Overloading/Overriding
+class Base { function show() { echo "Base"; } }
+class Child extends Base { function show() { echo "Child"; } }
+$c = new Child(); $c->show();
+
+// 37. Cookies again (like Q32)
+setcookie("theme", "dark", time()+3600);
+echo $_COOKIE['theme'];
+
+// 38. PDF with image (FPDF)
+$pdf = new FPDF();
+$pdf->AddPage();
+$pdf->Image('logo.png',10,10,30);
+$pdf->Output();
+
+// 39. Enter/retrieve from DB
+$conn->query("INSERT INTO emp (name) VALUES ('Amit')");
+$res = $conn->query("SELECT * FROM emp");
+while($r=$res->fetch_assoc()) echo $r['name'];
+
+// 40. Employee Form (HTML+PHP)
+<form method='post'>
+<input name='name'><input name='addr'><input name='mob'>
+<input name='dob'><input name='post'><input name='salary'><input type='submit'></form>
+<?php
+if($_POST) echo $_POST['name']." ". $_POST['addr'];
+?>
+
+
+</body>
+</html>
